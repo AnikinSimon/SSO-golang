@@ -1,0 +1,10 @@
+env: "local" 
+storage:
+  user: "student"
+  password: "student"
+  port: 5432
+  database: "sso"
+token_ttl: 1h
+grpc:
+  port: 44044
+  timeout: 10h
