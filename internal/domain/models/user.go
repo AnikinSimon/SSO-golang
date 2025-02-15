@@ -1,9 +1,13 @@
 package models
 
-import "github.com/google/uuid"
+import "gorm.io/gorm"
 
 type User struct {
-	UUID     uuid.UUID `gorm: "primaryKey"`
-	Email    string    `gorm: "unique, index"`
-	Passhash []byte		
+	gorm.Model
+	ID       string `gorm:"primaryKey"`
+	Email    string `gorm:"unique; not null"`
+	Passhash []byte `gorm:"not null"`
+	IsAdmin  bool   `gorm:"default:false"`
+	AppID    string `gorm:"not null"`
+	App      App    `gorm:"foreignKey:AppID"`
 }

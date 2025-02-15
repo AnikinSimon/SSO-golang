@@ -17,6 +17,7 @@ var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrInvalidAppID       = errors.New("invalid app id")
 	ErrUserExists         = errors.New("user already exists")
+	ErrAppExists          = errors.New("app already exists")
 )
 
 type Auth struct {
@@ -24,15 +25,17 @@ type Auth struct {
 	userSaver    UserSaver
 	userProvider UserProvider
 	appProvider  AppProvider
+	appSaver     AppSaver
 	tokenTTL     time.Duration
 }
 
 type UserSaver interface {
 	SaverUser(
 		ctx context.Context,
-		emaichan string,
+		email string,
 		passHash []byte,
-	) (uuid string, err error)
+		app_id string,
+	) (string, error)
 }
 
 type UserProvider interface {
@@ -44,18 +47,24 @@ type AppProvider interface {
 	App(ctx context.Context, appID string) (models.App, error)
 }
 
+type AppSaver interface {
+	SaveApp(ctx context.Context, name string, secret string) (string, error)
+}
+
 // Create new entity of Auth
 func New(
 	log *slog.Logger,
 	userSaver UserSaver,
 	userProvider UserProvider,
 	appProvider AppProvider,
+	appSaver AppSaver,
 	tokenTTL time.Duration,
 ) *Auth {
 	return &Auth{
 		userSaver:    userSaver,
 		userProvider: userProvider,
 		appProvider:  appProvider,
+		appSaver:     appSaver,
 		log:          log,
 		tokenTTL:     tokenTTL,
 	}
@@ -124,6 +133,7 @@ func (a *Auth) RegisterNewUser(
 	ctx context.Context,
 	email string,
 	password string,
+	app_id string,
 ) (string, error) {
 	const op = "services.auth.RegisterNewUser"
 
@@ -142,12 +152,12 @@ func (a *Auth) RegisterNewUser(
 		return "", fmt.Errorf("%s %w", op, err)
 	}
 
-	id, err := a.userSaver.SaverUser(ctx, email, passHash)
+	id, err := a.userSaver.SaverUser(ctx, email, passHash, app_id)
 
 	if err != nil {
 
 		if errors.Is(err, storage.ErrUserExists) {
-			a.log.Warn("user not found", slog.String("error:", err.Error()))
+			a.log.Warn("user already exists", slog.String("error:", err.Error()))
 
 			return "", fmt.Errorf("%s %w", op, ErrUserExists)
 		}
@@ -178,4 +188,35 @@ func (a *Auth) IsAdmin(ctx context.Context, userID string) (bool, error) {
 	log.Info("checked if user is admin", slog.Bool("is_admin", isAdmin))
 
 	return isAdmin, nil
+}
+
+func (a *Auth) RegisterNewApp(
+	ctx context.Context,
+	name string,
+	secret string,
+) (string, error) {
+	const op = "services.auth.RegisterNewApp"
+
+	log := a.log.With(
+		slog.String("op", op),
+		// slog.String("email", email),
+	)
+
+	log.Info("registering app")
+
+	id, err := a.appSaver.SaveApp(ctx, name, secret)
+
+	if err != nil {
+
+		if errors.Is(err, storage.ErrAppExists) {
+			a.log.Warn("app already exists", slog.String("error:", err.Error()))
+
+			return "", fmt.Errorf("%s %w", op, ErrAppExists)
+		}
+
+		log.Error("failed to save app", slog.String("error:", err.Error()))
+		return "", fmt.Errorf("%s %w", op, err)
+	}
+
+	return id, nil
 }

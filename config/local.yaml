@@ -1,7 +1,7 @@
 env: "local" 
 storage:
-  user: "student"
-  password: "student"
+  user: "yourname"
+  password: "pass"
   port: 5432
   database: "sso"
 token_ttl: 1h

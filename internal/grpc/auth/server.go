@@ -1,7 +1,10 @@
-package auth
+package authgrpc
 
 import (
 	"context"
+	"errors"
+	"sso/internal/services/auth"
+	"sso/internal/storage"
 
 	ssov1 "github.com/AnikinSimon/sso-protos/gen/go/sso"
 	"google.golang.org/grpc"
@@ -21,9 +24,12 @@ type Auth interface {
 		ctx context.Context,
 		email string,
 		password string,
+		app_id string,
 	) (userUUID string, err error)
 
 	IsAdmin(ctx context.Context, userID string) (isAdmin bool, err error)
+
+	RegisterNewApp(ctx context.Context, appID string, appSecret string) (appUUID string, err error)
 }
 
 type serverAPI struct {
@@ -49,7 +55,9 @@ func (s *serverAPI) Login(
 	token, err := s.auth.Login(ctx, req.GetEmail(), req.GetPassword(), req.GetAppUuid())
 
 	if err != nil {
-		// TODO: ...
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.InvalidArgument, "invalid argument")
+		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -69,9 +77,11 @@ func (s *serverAPI) Register(
 		return nil, err
 	}
 
-	userUUID, err := s.auth.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword())
+	userUUID, err := s.auth.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword(), req.GetAppUuid())
 	if err != nil {
-		
+		if errors.Is(err, storage.ErrUserExists) {
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
+		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -93,11 +103,36 @@ func (s *serverAPI) IsAdmin(
 
 	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserUuid())
 	if err != nil {
-		
+		if errors.Is(err, storage.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	return &ssov1.IsAdminResponse{
 		IsAdmin: isAdmin,
+	}, nil
+}
+
+func (s *serverAPI) RegisterApp(
+	ctx context.Context,
+	req *ssov1.RegisterAppRequest,
+) (*ssov1.RegisterAppResponse, error) {
+
+	err := validateRegisterApp(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	appID, err := s.auth.RegisterNewApp(ctx, req.GetName(), req.GetSecret())
+	if err != nil {
+		if errors.Is(err, storage.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+	return &ssov1.RegisterAppResponse{
+		AppUuid: appID,
 	}, nil
 }
 
@@ -126,12 +161,28 @@ func validateRegister(req *ssov1.RegisterRequest) error {
 		return status.Error(codes.InvalidArgument, "password is required")
 	}
 
+	if req.GetAppUuid() == "" {
+		return status.Error(codes.InvalidArgument, "app_id is required")
+	}
+
 	return nil
 }
 
 func validateIsAdmin(req *ssov1.IsAdminRequest) error {
 	if req.GetUserUuid() == "" {
 		return status.Error(codes.InvalidArgument, "user_uuid is required")
+	}
+
+	return nil
+}
+
+func validateRegisterApp(req *ssov1.RegisterAppRequest) error {
+	if req.GetName() == "" {
+		return status.Error(codes.InvalidArgument, "email is required")
+	}
+
+	if req.GetSecret() == "" {
+		return status.Error(codes.InvalidArgument, "password is required")
 	}
 
 	return nil

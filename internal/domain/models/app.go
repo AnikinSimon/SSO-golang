@@ -1,11 +1,10 @@
 package models
 
-import (
-	"github.com/google/uuid"
-)
+import "gorm.io/gorm"
 
 type App struct {
-	ID     uuid.UUID `gorm: "primaryKey"`
-	Name   string
+	gorm.Model
+	ID     string `gorm:"primaryKey"`
+	Name   string `gorm:"unique"`
 	Secret string
 }
