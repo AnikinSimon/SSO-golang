@@ -18,6 +18,7 @@ var (
 	ErrInvalidAppID       = errors.New("invalid app id")
 	ErrUserExists         = errors.New("user already exists")
 	ErrAppExists          = errors.New("app already exists")
+	ErrUserNotFound       = errors.New("user not found")
 )
 
 type Auth struct {
@@ -88,7 +89,7 @@ func (a *Auth) Login(
 	user, err := a.userProvider.User(ctx, email)
 
 	if err != nil {
-		if errors.Is(err, storage.ErrUserNotFound) {
+		if errors.Is(err, ErrUserNotFound) {
 			a.log.Warn("user not found", slog.String("error:", err.Error()))
 
 			return "", fmt.Errorf("%s %w", op, ErrInvalidCredentials)

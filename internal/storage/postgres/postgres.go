@@ -9,9 +9,24 @@ import (
 	"sso/internal/storage"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+const (
+	UniqueConstraintEmail = "uni_users_email"
+	UniqueConstraintApp   = "uni_apps_name"
+)
+
+func IsUniqueConstraintError(err error, constraintName string) bool {
+
+	if pqErr, ok := err.(*pgconn.PgError); ok {
+		return pqErr.Code == "23505" && pqErr.ConstraintName == constraintName
+	}
+	fmt.Println(err)
+	return false
+}
 
 type Storage struct {
 	db *gorm.DB
@@ -55,7 +70,7 @@ func (s *Storage) SaverUser(
 	tx := s.db.WithContext(ctx).Create(&user)
 
 	if tx.Error != nil {
-		if errors.Is(tx.Error, gorm.ErrDuplicatedKey) {
+		if IsUniqueConstraintError(tx.Error, UniqueConstraintEmail) {
 			return "", fmt.Errorf("%s %w", op, storage.ErrUserExists)
 		}
 
@@ -130,7 +145,8 @@ func (s *Storage) SaveApp(
 	tx := s.db.WithContext(ctx).Create(&app)
 
 	if tx.Error != nil {
-		if errors.Is(tx.Error, gorm.ErrDuplicatedKey) {
+		fmt.Println(tx.Error)
+		if IsUniqueConstraintError(tx.Error, UniqueConstraintApp) {
 			return "", fmt.Errorf("%s %w", op, storage.ErrAppExists)
 		}
 

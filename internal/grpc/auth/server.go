@@ -79,7 +79,7 @@ func (s *serverAPI) Register(
 
 	userUUID, err := s.auth.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword(), req.GetAppUuid())
 	if err != nil {
-		if errors.Is(err, storage.ErrUserExists) {
+		if errors.Is(err, auth.ErrUserExists) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		}
 		return nil, status.Error(codes.Internal, "internal error")
@@ -126,8 +126,8 @@ func (s *serverAPI) RegisterApp(
 
 	appID, err := s.auth.RegisterNewApp(ctx, req.GetName(), req.GetSecret())
 	if err != nil {
-		if errors.Is(err, storage.ErrUserNotFound) {
-			return nil, status.Error(codes.NotFound, "user not found")
+		if errors.Is(err, auth.ErrAppExists) {
+			return nil, status.Error(codes.NotFound, "app already exists")
 		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
@@ -178,11 +178,11 @@ func validateIsAdmin(req *ssov1.IsAdminRequest) error {
 
 func validateRegisterApp(req *ssov1.RegisterAppRequest) error {
 	if req.GetName() == "" {
-		return status.Error(codes.InvalidArgument, "email is required")
+		return status.Error(codes.InvalidArgument, "name is required")
 	}
 
 	if req.GetSecret() == "" {
-		return status.Error(codes.InvalidArgument, "password is required")
+		return status.Error(codes.InvalidArgument, "secret is required")
 	}
 
 	return nil
