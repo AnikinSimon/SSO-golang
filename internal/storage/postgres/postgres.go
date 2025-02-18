@@ -33,8 +33,8 @@ type Storage struct {
 }
 
 func getPostgresConn(cfg config.StorageConfig) string {
-	return fmt.Sprintf("host=localhost user=%s password=%s dbname=%s port=%d sslmode=disable",
-		cfg.User, cfg.Password, cfg.Database, cfg.Port)
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
+		cfg.Host, cfg.User, cfg.Password, cfg.Database, cfg.Port)
 }
 
 func New(cfg config.StorageConfig) (*Storage, error) {

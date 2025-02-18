@@ -1,7 +1,8 @@
 env: "local" 
 storage:
-  user: "yourname"
-  password: "pass"
+  host: "postgres"
+  user: "AnikinSimon"
+  password: "MyPassword"
   port: 5432
   database: "sso"
 token_ttl: 1h
