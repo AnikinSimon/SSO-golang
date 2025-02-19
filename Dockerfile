@@ -1,10 +1,16 @@
-FROM golang:1.24.0
+FROM golang:1.24.0 AS builder
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+RUN --mount=type=cache,target="./root/.cache/go-build" go build -o /app/sso /app/cmd/sso/
 
-CMD ["go", "run", "cmd/sso/main.go"]
+FROM ubuntu:24.04
+
+WORKDIR /app
+COPY --from=builder /app/sso .
+COPY --from=builder /app/config/ /app/config/
+ENTRYPOINT [ "/app/sso" ]
