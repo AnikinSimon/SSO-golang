@@ -12,5 +12,7 @@ FROM ubuntu:24.04
 
 WORKDIR /app
 COPY --from=builder /app/sso .
+COPY --from=builder /app/cert/*.pem /app/cert/
 COPY --from=builder /app/config/ /app/config/
+
 ENTRYPOINT [ "/app/sso" ]

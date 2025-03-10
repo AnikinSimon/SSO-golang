@@ -1,12 +1,17 @@
 package grpcapp
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
+	"os"
 	authgrpc "sso/internal/grpc/auth"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 type App struct {
@@ -15,12 +20,21 @@ type App struct {
 	port       int
 }
 
+var (
+	ErrAddClientToCA = errors.New("failed to add client CA's certificate")
+)
+
 func New(
 	log *slog.Logger,
 	authService authgrpc.Auth,
 	port int,
-) *App {
-	gRPCServer := grpc.NewServer()
+) (*App, error) {
+
+	creds, err := loadTLSCredentials()
+
+	gRPCServer := grpc.NewServer(
+		grpc.Creds(creds),
+	)
 
 	authgrpc.Register(gRPCServer, authService)
 
@@ -28,7 +42,7 @@ func New(
 		log:        log,
 		gRPCServer: gRPCServer,
 		port:       port,
-	}
+	}, err
 }
 
 func (a *App) MustRun() {
@@ -58,6 +72,33 @@ func (a *App) Run() error {
 	}
 
 	return nil
+}
+
+func loadTLSCredentials() (credentials.TransportCredentials, error) {
+	const op = "app.grpc.loadTLSCredentials"
+
+	pemClientCA, err := os.ReadFile("cert/ca-cert.pem")
+	if err != nil {
+		return nil, fmt.Errorf("%s %w", op, err)
+	}
+
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemClientCA) {
+		return nil, fmt.Errorf("%s %w", op, ErrAddClientToCA)
+	}
+
+	serverCert, err := tls.LoadX509KeyPair("cert/server-cert.pem", "cert/server-key.pem")
+	if err != nil {
+		return nil, fmt.Errorf("%s %w", op, err)
+	}
+
+	config := &tls.Config{
+		Certificates: []tls.Certificate{serverCert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
+	}
+
+	return credentials.NewTLS(config), nil
 }
 
 func (a *App) Stop() {

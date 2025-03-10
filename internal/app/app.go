@@ -19,7 +19,7 @@ func New(
 	storageCfg config.StorageConfig,
 	tokenTTL time.Duration,
 ) *App {
-
+	
 	storage, err := postgres.New(storageCfg)
 	if err != nil {
 		panic(err)
@@ -27,7 +27,12 @@ func New(
 
 	authService := auth.New(log, storage, storage, storage, storage, tokenTTL)
 
-	grpcApp := grpcapp.New(log, authService, grpcPort)
+	grpcApp, err := grpcapp.New(log, authService, grpcPort)
+
+	if err != nil {
+		panic(err)
+	}
+
 	return &App{
 		GRPCServer: grpcApp,
 	}
