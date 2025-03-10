@@ -42,3 +42,15 @@
 
 # Технологический стек
 Golang, Postgres, gRPC, GORM, Protobuf, JWT
+
+# Запуск
+```
+make run
+```
+
+# Остановка
+
+```
+make stop
+```
+
