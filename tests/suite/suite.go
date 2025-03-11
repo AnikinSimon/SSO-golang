@@ -59,7 +59,7 @@ func New(t *testing.T) (context.Context, *Suite) {
 }
 
 func loadTLSCredentials() (credentials.TransportCredentials, error) {
-
+	// Загружаем сертификат CA, подписавшего сертификат сервера
 	pemServerCA, err := os.ReadFile("../../cert/ca-cert.pem")
 	if err != nil {
 		return nil, err
@@ -70,14 +70,9 @@ func loadTLSCredentials() (credentials.TransportCredentials, error) {
 		return nil, fmt.Errorf("failed to add server CA's certificate")
 	}
 
-	clientCert, err := tls.LoadX509KeyPair("../../cert/client-cert.pem", "../../cert/client-key.pem")
-	if err != nil {
-		return nil, err
-	}
-
+	// Создаём идентификационные данные и возвращаем их
 	config := &tls.Config{
-		Certificates: []tls.Certificate{clientCert},
-		RootCAs:      certPool,
+		RootCAs: certPool,
 	}
 
 	return credentials.NewTLS(config), nil

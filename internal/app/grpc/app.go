@@ -2,12 +2,10 @@ package grpcapp
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net"
-	"os"
 	authgrpc "sso/internal/grpc/auth"
 
 	"google.golang.org/grpc"
@@ -77,16 +75,6 @@ func (a *App) Run() error {
 func loadTLSCredentials() (credentials.TransportCredentials, error) {
 	const op = "app.grpc.loadTLSCredentials"
 
-	pemClientCA, err := os.ReadFile("cert/ca-cert.pem")
-	if err != nil {
-		return nil, fmt.Errorf("%s %w", op, err)
-	}
-
-	certPool := x509.NewCertPool()
-	if !certPool.AppendCertsFromPEM(pemClientCA) {
-		return nil, fmt.Errorf("%s %w", op, ErrAddClientToCA)
-	}
-
 	serverCert, err := tls.LoadX509KeyPair("cert/server-cert.pem", "cert/server-key.pem")
 	if err != nil {
 		return nil, fmt.Errorf("%s %w", op, err)
@@ -94,8 +82,7 @@ func loadTLSCredentials() (credentials.TransportCredentials, error) {
 
 	config := &tls.Config{
 		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    certPool,
+		ClientAuth:   tls.NoClientCert,
 	}
 
 	return credentials.NewTLS(config), nil
