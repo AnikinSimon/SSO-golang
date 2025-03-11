@@ -127,7 +127,7 @@ func (s *serverAPI) RegisterApp(
 	appID, err := s.auth.RegisterNewApp(ctx, req.GetName(), req.GetSecret())
 	if err != nil {
 		if errors.Is(err, auth.ErrAppExists) {
-			return nil, status.Error(codes.NotFound, "app already exists")
+			return nil, status.Error(codes.AlreadyExists, "app already exists")
 		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
