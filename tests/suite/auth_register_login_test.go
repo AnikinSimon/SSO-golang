@@ -196,9 +196,9 @@ func TestRegister_FailCase(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := st.AuthClient.Register(ctx, &ssov1.RegisterRequest{
-				Email: tt.email,
+				Email:    tt.email,
 				Password: tt.password,
-				AppUuid: appId,
+				AppUuid:  appId,
 			})
 
 			require.Error(t, err)
@@ -212,27 +212,27 @@ func TestRegisterApp_FailCase(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		appName       string
-		appSecret    string
+		appName     string
+		appSecret   string
 		expectedErr string
 	}{
 		{
 			name:        "Register with empty secret",
-			appName:       gofakeit.Name(),
-			appSecret:    "",
+			appName:     gofakeit.Name(),
+			appSecret:   "",
 			expectedErr: "secret is required",
 		},
 		{
 			name:        "Register with empty name",
-			appName:      "",
-			appSecret:    randomFakePassword(),
+			appName:     "",
+			appSecret:   randomFakePassword(),
 			expectedErr: "name is required",
 		},
 
 		{
 			name:        "Register with both empty",
-			appName:      "",
-			appSecret:    "",
+			appName:     "",
+			appSecret:   "",
 			expectedErr: "name is required",
 		},
 	}
@@ -240,7 +240,7 @@ func TestRegisterApp_FailCase(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := st.AuthClient.RegisterApp(ctx, &ssov1.RegisterAppRequest{
-				Name: tt.appName,
+				Name:   tt.appName,
 				Secret: tt.appSecret,
 			})
 
