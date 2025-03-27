@@ -1,2 +1,5 @@
 /cert/*.pem
 /cert/*.srl
+/config/local.yaml
+
+.idea

@@ -16,6 +16,7 @@ type App struct {
 func New(
 	log *slog.Logger,
 	grpcPort int,
+	gatewayPort int,
 	storageCfg config.StorageConfig,
 	tokenTTL time.Duration,
 ) *App {
@@ -27,7 +28,7 @@ func New(
 
 	authService := auth.New(log, storage, storage, storage, storage, tokenTTL)
 
-	grpcApp, err := grpcapp.New(log, authService, grpcPort)
+	grpcApp, err := grpcapp.New(log, authService, grpcPort, gatewayPort)
 
 	if err != nil {
 		panic(err)

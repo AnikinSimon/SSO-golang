@@ -22,9 +22,10 @@ func main() {
 
 	log.Info("starting application ", slog.Any("env", cfg))
 
-	application := app.New(log, cfg.GRPC.Port, cfg.Storage, cfg.TokenTTL)
+	application := app.New(log, cfg.GRPC.Port, cfg.GRPC.GatewayPort, cfg.Storage, cfg.TokenTTL)
 
-	go application.GRPCServer.MustRun()
+	go application.GRPCServer.MustRunRPC()
+	go application.GRPCServer.MustRunGateway()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)

@@ -16,12 +16,13 @@ type Config struct {
 }
 
 type GRPCConfig struct {
-	Port    int           `yaml:"port"`
-	Timeout time.Duration `yaml:"timeout"`
+	Port        int           `yaml:"port"`
+	GatewayPort int           `yaml:"gateway_port"`
+	Timeout     time.Duration `yaml:"timeout"`
 }
 
 type StorageConfig struct {
-	Host 	string `yaml:"host"`
+	Host     string `yaml:"host"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Port     int    `yaml:"port"`

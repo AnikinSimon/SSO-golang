@@ -5,8 +5,9 @@ import (
 	"errors"
 	"sso/internal/services/auth"
 	"sso/internal/storage"
+	ssov1 "sso/streaming/go/sso"
 
-	ssov1 "github.com/AnikinSimon/sso-protos/gen/go/sso"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -37,9 +38,22 @@ type serverAPI struct {
 	auth Auth
 }
 
-func Register(gRPC *grpc.Server, auth Auth) {
-	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth})
+func Register(ctx context.Context, router *runtime.ServeMux, gRPC *grpc.Server, auth Auth) {
+	serveApi := &serverAPI{auth: auth}
+
+	ssov1.RegisterAuthServer(gRPC, serveApi)
+	err := ssov1.RegisterAuthHandlerServer(ctx, router, serveApi)
+	if err != nil {
+		panic(err)
+	}
 }
+
+//func RegisterGateway(ctx context.Context, router *runtime.ServeMux, auth Auth) {
+//	err := ssov1.RegisterAuthHandlerServer(ctx, router, &serverAPI{auth: auth})
+//	if err != nil {
+//		panic(err)
+//	}
+//}
 
 func (s *serverAPI) Login(
 	ctx context.Context,

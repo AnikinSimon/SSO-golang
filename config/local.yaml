@@ -8,4 +8,5 @@ storage:
 token_ttl: 1h
 grpc:
   port: 44044
+  gateway_port: 8081
   timeout: 10h

@@ -1,0 +1,12 @@
+env: "local"
+storage:
+  host: "postgres"
+  user: "ExampleUser"
+  password: "ExamplePass"
+  port: 5432
+  database: "ExampleDb"
+token_ttl: 1h
+grpc:
+  port: 44044
+  gateway_port: 8081
+  timeout: 10h

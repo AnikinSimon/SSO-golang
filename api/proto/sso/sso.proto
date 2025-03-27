@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "anikin.sso.v1;ssov1";
+
+import "google/api/annotations.proto";
+
+service Auth {
+  rpc Register (RegisterRequest) returns (RegisterResponse) {
+    option (google.api.http) = {
+      post : "/api/sso/register"
+      body : "*"
+    };
+  };
+  rpc Login (LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post : "/api/sso/login"
+      body : "*"
+    };
+  };
+  rpc IsAdmin (IsAdminRequest) returns (IsAdminResponse) {
+    option (google.api.http) = {
+      get : "/api/sso/admin"
+    };
+  };
+  rpc RegisterApp (RegisterAppRequest) returns (RegisterAppResponse) {
+    option (google.api.http) = {
+      post : "/api/sso/app"
+      body : "*"
+    };
+  };
+}
+
+message IsAdminRequest {
+  string user_uuid = 1; 
+}
+
+message IsAdminResponse {
+  bool is_admin = 1; 
+}
+
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string app_uuid = 3;
+}
+
+message RegisterResponse {
+  string user_uuid = 1; 
+}
+
+message LoginRequest {
+  string email = 1; 
+  string password = 2;
+  string app_uuid = 3; 
+}
+
+message LoginResponse {
+  string token = 1; 
+}
+
+message RegisterAppRequest {
+  string name = 1;
+  string secret = 2;
+}
+
+message RegisterAppResponse {
+  string app_uuid = 1; 
+}
