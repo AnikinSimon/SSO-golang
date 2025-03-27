@@ -31,6 +31,12 @@ var (
 	ErrAddClientToCA = errors.New("failed to add client CA's certificate")
 )
 
+const (
+	caCertFile     = "cert/ca-cert.pem"
+	serverCertFile = "cert/server-cert.pem"
+	serverKeyFile  = "cert/server-key.pem"
+)
+
 func New(
 	log *slog.Logger,
 	authService authgrpc.Auth,
@@ -113,7 +119,7 @@ func (a *App) RunGateway() error {
 
 	log.Info("gRPC-gateway is running", slog.String("addr", l.Addr().String()))
 
-	if err := http.Serve(l, a.gRPCGateway); err != nil {
+	if err := http.ServeTLS(l, a.gRPCGateway, serverCertFile, serverKeyFile); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -123,7 +129,7 @@ func (a *App) RunGateway() error {
 func loadTLSCredentials() (credentials.TransportCredentials, error) {
 	const op = "app.grpc.loadTLSCredentials"
 
-	pemClientCA, err := os.ReadFile("cert/ca-cert.pem")
+	pemClientCA, err := os.ReadFile(caCertFile)
 	if err != nil {
 		return nil, fmt.Errorf("%s %w", op, err)
 	}
@@ -133,7 +139,7 @@ func loadTLSCredentials() (credentials.TransportCredentials, error) {
 		return nil, fmt.Errorf("%s %w", op, ErrAddClientToCA)
 	}
 
-	serverCert, err := tls.LoadX509KeyPair("cert/server-cert.pem", "cert/server-key.pem")
+	serverCert, err := tls.LoadX509KeyPair(serverCertFile, serverKeyFile)
 	if err != nil {
 		return nil, fmt.Errorf("%s %w", op, err)
 	}
