@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"testing"
 
-	ssov1 "github.com/AnikinSimon/sso-protos/gen/go/sso"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	ssov1 "sso/streaming/go/sso"
 )
 
 const (
